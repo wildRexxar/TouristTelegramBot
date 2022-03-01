@@ -1,15 +1,36 @@
 package com.example.botdemo.dao;
 
 import com.example.botdemo.entity.City;
+import org.hibernate.Session;
+import org.hibernate.query.Query;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
 
+import javax.persistence.EntityManager;
 import java.util.List;
 
-public interface CityDao {
-    List<City> cityList();
+@Repository
+public class CityDao {
 
-    void saveCity(City city);
+    @Autowired
+    private EntityManager entityManager;
 
-    City getCity(int id);
+    public List<City> cityList() {
+        Session session = entityManager.unwrap(Session.class);
+        return session
+                .createQuery("from City ", City.class)
+                .getResultList();
+    }
 
-    void deleteCity(int id);
+    public void saveCity(City city) {
+
+    }
+
+    public City getCity(int id) {
+        return null;
+    }
+
+    public void deleteCity(int id) {
+
+    }
 }

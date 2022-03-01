@@ -3,23 +3,27 @@ package com.example.botdemo.controller;
 import com.example.botdemo.entity.City;
 import com.example.botdemo.service.CityService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Optional;
 
-@RequestMapping("/api")
-@Controller
+@Component
 public class CityRestController {
 
     @Autowired
     private CityService cityService;
 
-    @GetMapping("/cities")
-    public List<City> showAllCities() {
-        System.out.println(cityService.cityList());
-        return null;
-    }
-}
+    public String findCityFromDB(String title) {
+        Optional <City> optional = cityService.cityList().stream()
+                .filter(t -> t.getTitle().equals(title)).findFirst();
+                if(optional.isPresent()) {
+                    return optional.get().getTitle();
+                } else {
+                    return null;
+                }
+            }
+        }

@@ -1,31 +1,58 @@
 package com.example.botdemo.telegram_bot;
 
 import com.example.botdemo.controller.CityRestController;
+import com.example.botdemo.entity.City;
 import lombok.SneakyThrows;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.ApiContextInitializer;
-import org.telegram.telegrambots.bots.DefaultBotOptions;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
-import org.telegram.telegrambots.meta.ApiContext;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
-import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-import org.telegram.telegrambots.meta.generics.BotSession;
-import org.telegram.telegrambots.starter.AfterBotRegistration;
-import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 
 import javax.annotation.PostConstruct;
-
-import static java.awt.SystemColor.text;
 
 @Component
 public class TouristBot extends TelegramLongPollingBot {
 
-    @Autowired
-    private CityRestController controller;
+    private final CityRestController controller;
+
+    @Value("${bot.token}")
+    private String token;
+
+    @Value("${bot.name}")
+    private String name;
+
+    @Value("${bot.cityNotFound}")
+    private String cityNotFound;
+
+    static  {
+        ApiContextInitializer.init();
+    }
+
+    TouristBot(CityRestController controller) {
+        this.controller = controller;
+    }
+
+    @PostConstruct
+    @SneakyThrows
+    public void registerBot(){
+        TelegramBotsApi telegramBotsApi = new TelegramBotsApi();
+        telegramBotsApi.registerBot(this);
+
+    }
+    @Override
+    public String getBotUsername() {
+        return name;
+    }
+
+
+    @Override
+    public String getBotToken() {
+        return token;
+    }
 
     @Override
     @SneakyThrows
@@ -36,46 +63,21 @@ public class TouristBot extends TelegramLongPollingBot {
 
             Message message = update.getMessage();
             if (message.hasText()) {
+                City cityFromDB = controller.getCityFromBD(message.getText());
 
-                String textFromDB = controller.findCityFromDB(message.getText());
-                System.out.println(textFromDB);
-
-                if (textFromDB != null) {
+                if (cityFromDB != null) {
                     SendMessage sendMessage = new SendMessage()
                             .setChatId(message.getChatId().toString())
-                            .setText("true");
+                            .setText(cityFromDB.getAttraction());
                     execute(sendMessage);
                 } else {
                     SendMessage sendMessage = new SendMessage()
                             .setChatId(message.getChatId().toString())
-                            .setText("false");
+                            .setText(cityNotFound);
                     execute(sendMessage);
 
                 }
             }
         }
     }
-
-    static  {
-        ApiContextInitializer.init();
-    }
-
-    @Override
-    public String getBotUsername() {
-        return "@Tourist7428Bot";
-    }
-
-    @Override
-    public String getBotToken() {
-        return "5116991507:AAG6McU9MgvuzeBYU84Zl7yYZMN4Y35RAbs";
-    }
-
-
-    @PostConstruct
-    @SneakyThrows
-    public void registerBot(){
-        TelegramBotsApi telegramBotsApi = new TelegramBotsApi();
-            telegramBotsApi.registerBot(this);
-
-        }
-    }
+}

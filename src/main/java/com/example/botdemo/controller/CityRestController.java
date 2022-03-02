@@ -1,29 +1,52 @@
 package com.example.botdemo.controller;
 
 import com.example.botdemo.entity.City;
-import com.example.botdemo.service.CityService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import com.example.botdemo.exception_hadling.CityException;
+import com.example.botdemo.service.CityServiceImpl;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 
-@Component
+@RestController
+@RequestMapping("/api")
 public class CityRestController {
 
-    @Autowired
-    private CityService cityService;
+    private final CityServiceImpl cityService;
 
-    public String findCityFromDB(String title) {
-        Optional <City> optional = cityService.cityList().stream()
-                .filter(t -> t.getTitle().equals(title)).findFirst();
-                if(optional.isPresent()) {
-                    return optional.get().getTitle();
-                } else {
-                    return null;
-                }
-            }
+    public CityRestController(CityServiceImpl cityService) {
+        this.cityService = cityService;
+    }
+
+    @GetMapping("/cities/{city}")
+    public City getCityFromBD(@PathVariable String city) {
+        return cityService.getCity(city);
+    }
+
+    @GetMapping("/cities")
+    public List<City> getAllCities() {
+        return cityService.cityList();
+    }
+
+    @PostMapping("/cities")
+    public City addNewCity(@RequestBody City city) {
+        cityService.saveCity(city);
+        return city;
+    }
+
+    @PutMapping("/cities")
+    public City updateCity(@RequestBody City city) {
+        cityService.saveCity(city);
+        return city;
+    }
+
+    @DeleteMapping("/cities/{city}")
+    public String deleteCity(@PathVariable String city) {
+        City cityForDelete = cityService.getCity(city);
+        if(cityForDelete == null) {
+            throw  new CityException("City : " + city + " is not found");
         }
+        cityService.deleteCity(city);
+
+        return "City : " + city + " was deleted";
+    }
+}
